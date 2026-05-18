@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda - Maneirin Studio</title>
+    <title>Produtos - Maneirin Studio</title>
     <link rel="stylesheet" href="../styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -27,25 +27,27 @@
         </nav>
     </header>
 
-    <main class="agenda-page">
-        <section class="agenda-hero">
+    <main class="products-page">
+        <section class="products-page-hero">
             <div class="container">
-                <h1>Agenda</h1>
-                <p>Escolha um horário disponível e fale direto no WhatsApp para confirmar seu atendimento.</p>
+                <h1>Produtos</h1>
+                <p>Recomendações do Maneirin Studio para manter o cuidado em casa.</p>
             </div>
         </section>
 
-        <section class="agenda-container container">
-            <div id="agendaList" aria-live="polite">
-                <div class="no-slots">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    Carregando horários...
-                </div>
+        <section class="products-page-list container">
+            <div class="disclaimer">
+                <i class="fas fa-info-circle"></i>
+                O proprietário deste site recebe uma comissão pelas compras realizadas através dos links abaixo, sem custo adicional para você.
+            </div>
+
+            <div class="products-grid products-all-grid" data-products-list data-products-mode="grid" aria-live="polite">
+                <p class="loading-message">Carregando produtos...</p>
             </div>
         </section>
     </main>
 
-    <a class="floating-whatsapp" data-whatsapp-message="Olá! Vim pela agenda do Maneirin Studio e gostaria de tirar uma dúvida." aria-label="Chamar no WhatsApp">
+    <a class="floating-whatsapp" data-whatsapp-message="Olá! Vim pela página de produtos do Maneirin Studio e gostaria de tirar uma dúvida." aria-label="Chamar no WhatsApp">
         <i class="fab fa-whatsapp"></i>
     </a>
 

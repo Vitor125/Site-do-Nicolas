@@ -113,41 +113,74 @@ function setupWhatsappLinks() {
     });
 }
 
+function productCardTemplate(product) {
+    const name = escapeHtml(product.name);
+    const description = escapeHtml(product.description || '');
+    const imageUrl = escapeHtml(product.image_url || '');
+    const productUrl = escapeHtml(safeExternalUrl(product.affiliate_link));
+
+    return `
+        <article class="product-card fade-in">
+            <div class="product-img">
+                ${imageUrl
+                    ? `<img src="${imageUrl}" alt="${name}" loading="lazy" onerror="this.remove();">`
+                    : '<i class="fas fa-box-open"></i>'}
+            </div>
+            <h3>${name}</h3>
+            ${description ? `<p>${description}</p>` : '<p>Produto recomendado pelo Maneirin Studio.</p>'}
+            <a href="${productUrl}" class="btn btn-secondary" target="_blank" rel="noopener">Ver Produto</a>
+        </article>
+    `;
+}
+
+function setupProductCarousel(container) {
+    const track = container.querySelector('.products-carousel-track');
+    const prev = container.querySelector('[data-carousel-prev]');
+    const next = container.querySelector('[data-carousel-next]');
+
+    if (!track || !prev || !next) return;
+
+    const scrollCarousel = direction => {
+        const distance = Math.max(track.clientWidth * 0.82, 280);
+        track.scrollBy({ left: direction * distance, behavior: 'smooth' });
+    };
+
+    prev.addEventListener('click', () => scrollCarousel(-1));
+    next.addEventListener('click', () => scrollCarousel(1));
+}
+
 function renderProducts(products) {
-    const grid = document.querySelector('.products-grid');
-    if (!grid) return;
+    const container = document.querySelector('[data-products-list]');
+    if (!container) return;
 
     if (!products.length) {
-        grid.innerHTML = '<p class="empty-message">Nenhum produto cadastrado ainda.</p>';
+        container.innerHTML = '<p class="empty-message">Nenhum produto cadastrado ainda.</p>';
         return;
     }
 
-    grid.innerHTML = products.map(product => {
-        const name = escapeHtml(product.name);
-        const description = escapeHtml(product.description || '');
-        const imageUrl = escapeHtml(product.image_url || '');
-        const productUrl = escapeHtml(safeExternalUrl(product.affiliate_link));
-
-        return `
-            <article class="product-card fade-in">
-                <div class="product-img">
-                    ${imageUrl
-                        ? `<img src="${imageUrl}" alt="${name}" loading="lazy" onerror="this.remove();">`
-                        : '<i class="fas fa-box-open"></i>'}
-                </div>
-                <h3>${name}</h3>
-                ${description ? `<p>${description}</p>` : '<p>Produto recomendado pelo Maneirin Studio.</p>'}
-                <a href="${productUrl}" class="btn btn-secondary" target="_blank" rel="noopener">Ver Produto</a>
-            </article>
+    if (container.dataset.productsMode === 'carousel') {
+        container.innerHTML = `
+            <button class="carousel-button carousel-button-prev" type="button" data-carousel-prev aria-label="Produto anterior">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="products-carousel-track" tabindex="0">
+                ${products.map(productCardTemplate).join('')}
+            </div>
+            <button class="carousel-button carousel-button-next" type="button" data-carousel-next aria-label="Próximo produto">
+                <i class="fas fa-chevron-right"></i>
+            </button>
         `;
-    }).join('');
+        setupProductCarousel(container);
+    } else {
+        container.innerHTML = products.map(productCardTemplate).join('');
+    }
 
     setupAnimations();
 }
 
 async function fetchProducts() {
-    const grid = document.querySelector('.products-grid');
-    if (!grid) return;
+    const container = document.querySelector('[data-products-list]');
+    if (!container) return;
 
     try {
         const response = await fetch(`${API_URL}/products`);
@@ -156,7 +189,7 @@ async function fetchProducts() {
         renderProducts(products);
     } catch (error) {
         console.error(error);
-        grid.innerHTML = '<p class="empty-message">Não foi possível carregar os produtos agora.</p>';
+        container.innerHTML = '<p class="empty-message">Não foi possível carregar os produtos agora.</p>';
     }
 }
 

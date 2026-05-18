@@ -162,6 +162,21 @@ def legacy_agenda_page():
     return RedirectResponse(url="/agenda/")
 
 
+@app.get("/produtos", include_in_schema=False)
+def products_redirect():
+    return RedirectResponse(url="/produtos/")
+
+
+@app.get("/produtos/", include_in_schema=False)
+def products_page():
+    return FileResponse(BASE_DIR / "produtos" / "index.html")
+
+
+@app.get("/produtos/index.html", include_in_schema=False)
+def products_index_page():
+    return FileResponse(BASE_DIR / "produtos" / "index.html")
+
+
 @app.get("/dashboard", include_in_schema=False)
 def dashboard_redirect():
     return RedirectResponse(url="/dashboard.html")
