@@ -11,17 +11,17 @@
 <body>
     <header class="header">
         <nav class="navbar">
-            <a href="#" class="logo">
-                <img src="Fotos/logo.png" alt="Maneirin Studio Logo" style="height: 50px; width: auto;">
+            <a href="index.html" class="logo" aria-label="Maneirin Studio">
+                <img src="Fotos/Logo.png" alt="Maneirin Studio" style="height: 50px; width: auto;">
             </a>
-            <div class="hamburger">
+            <button class="hamburger" type="button" aria-label="Abrir menu">
                 <i class="fas fa-bars"></i>
-            </div>
+            </button>
             <ul class="nav-links">
                 <li><a href="#inicio">Início</a></li>
                 <li><a href="#sobre">Sobre Nós</a></li>
                 <li><a href="#produtos">Recomendações</a></li>
-                <li><a href="agenda.html">Agenda</a></li>
+                <li><a href="agenda/">Agenda</a></li>
                 <li><a href="#contato">Contato</a></li>
             </ul>
         </nav>
@@ -33,10 +33,16 @@
                 <h1>Sua imagem em evidência</h1>
                 <p>Mais do que um corte, uma experiência premium no Maneirin Studio.</p>
                 <div class="location-badge">
-                    <i class="fas fa-map-marker-alt"></i> R. Nilópolis, 352 - Éden, São João de Meriti
+                    <i class="fas fa-map-marker-alt"></i>
+                    R. Nilópolis, 352 - Éden, São João de Meriti - RJ
                 </div>
-                <br>
-                <a href="agenda.html" class="btn btn-primary">Agendar Agora</a>
+                <div class="hero-actions">
+                    <a href="agenda/" class="btn btn-primary">Agendar Agora</a>
+                    <a class="btn btn-whatsapp" data-whatsapp-message="Olá! Vim pelo site do Maneirin Studio e gostaria de entrar em contato.">
+                        <i class="fab fa-whatsapp"></i>
+                        Chamar no WhatsApp
+                    </a>
+                </div>
             </div>
         </section>
 
@@ -48,8 +54,7 @@
                     <p>Com um espaço projetado para o seu conforto, utilizamos produtos de ponta e técnicas avançadas para que cada visita seja uma experiência revigorante e única.</p>
                 </div>
                 <div class="about-image">
-                    <!-- Placeholder for barber shop image -->
-                    <div class="img-placeholder"></div>
+                    <div class="img-placeholder" aria-label="Ambiente de barbearia"></div>
                 </div>
             </div>
         </section>
@@ -58,40 +63,14 @@
             <div class="container">
                 <h2>Nossas Recomendações</h2>
                 <p class="section-desc">Produtos selecionados pelos nossos especialistas para manter seu estilo impecável em casa.</p>
-                
+
                 <div class="disclaimer">
-                    <i class="fas fa-info-circle"></i> O proprietário deste site recebe uma comissão pelas compras realizadas através dos links abaixo, ajudando a manter o Maneirin Studio, sem custo adicional para você.
+                    <i class="fas fa-info-circle"></i>
+                    O proprietário deste site recebe uma comissão pelas compras realizadas através dos links abaixo, ajudando a manter o Maneirin Studio, sem custo adicional para você.
                 </div>
 
-                <div class="products-grid">
-                    <!-- Produto 1 -->
-                    <div class="product-card">
-                        <div class="product-img">
-                            <!-- Ícone temporário (substitua por <img> real depois) -->
-                            <i class="fas fa-box-open"></i>
-                        </div>
-                        <h3>Pomada Modeladora Premium</h3>
-                        <p>Efeito matte e fixação forte para manter o penteado durante todo o dia.</p>
-                        <a href="#" class="btn btn-secondary" target="_blank">Ver Produto no Site</a>
-                    </div>
-                    <!-- Produto 2 -->
-                    <div class="product-card">
-                        <div class="product-img">
-                            <i class="fas fa-spray-can"></i>
-                        </div>
-                        <h3>Óleo Hidratante para Barba</h3>
-                        <p>Hidratação profunda, brilho natural e perfume marcante para a sua barba.</p>
-                        <a href="#" class="btn btn-secondary" target="_blank">Ver Produto no Site</a>
-                    </div>
-                    <!-- Produto 3 -->
-                    <div class="product-card">
-                        <div class="product-img">
-                            <i class="fas fa-cut"></i>
-                        </div>
-                        <h3>Máquina de Acabamento</h3>
-                        <p>Ferramenta profissional para ajustes precisos e acabamento perfeito em casa.</p>
-                        <a href="#" class="btn btn-secondary" target="_blank">Ver Produto no Site</a>
-                    </div>
+                <div class="products-grid" aria-live="polite">
+                    <p class="loading-message">Carregando produtos...</p>
                 </div>
             </div>
         </section>
@@ -101,13 +80,13 @@
                 <h2>Contato</h2>
                 <div class="contact-wrapper">
                     <div class="contact-info">
-                        <div class="info-item">
+                        <a class="info-item contact-link" data-whatsapp-message="Olá! Vim pelo site do Maneirin Studio e gostaria de falar com vocês.">
                             <i class="fab fa-whatsapp"></i>
                             <div>
                                 <h4>WhatsApp</h4>
-                                <p><a href="https://wa.me/5521980453636?text=Olá,%20gostaria%20de%20entrar%20em%20contato%20com%20o%20Maneirin%20Studio" target="_blank" style="color: var(--text-muted); text-decoration: none;">(21) 98045-3636</a></p>
+                                <p>(21) 98045-3636</p>
                             </div>
-                        </div>
+                        </a>
                         <div class="info-item">
                             <i class="fab fa-instagram"></i>
                             <div>
@@ -115,18 +94,22 @@
                                 <p>@studiomaneirin</p>
                             </div>
                         </div>
-                        <div class="info-item">
+                        <a class="info-item contact-link" href="https://www.google.com/maps/search/?api=1&query=R.%20Nil%C3%B3polis%2C%20352%20-%20%C3%89den%2C%20S%C3%A3o%20Jo%C3%A3o%20de%20Meriti%20-%20RJ%2C%2025535-050" target="_blank" rel="noopener">
                             <i class="fas fa-map-marker-alt"></i>
                             <div>
                                 <h4>Localização</h4>
                                 <p>R. Nilópolis, 352 - Éden<br>São João de Meriti - RJ, 25535-050</p>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </div>
         </section>
     </main>
+
+    <a class="floating-whatsapp" data-whatsapp-message="Olá! Vim pelo site do Maneirin Studio e gostaria de entrar em contato." aria-label="Chamar no WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
 
     <footer>
         <div class="container">

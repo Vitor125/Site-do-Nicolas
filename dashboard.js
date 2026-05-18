@@ -1,36 +1,85 @@
-const API_URL = 'http://127.0.0.1:8000/api';
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 
-document.getElementById('productForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const product = {
-        name: document.getElementById('prodName').value,
-        description: document.getElementById('prodDesc').value,
-        image_url: document.getElementById('prodImage').value,
-        affiliate_link: document.getElementById('prodLink').value
-    };
+function setDashboardStatus(message, type = 'success') {
+    const status = document.getElementById('dashboardStatus');
+    if (!status) return;
+
+    status.textContent = message;
+    status.className = `dashboard-status ${type}`;
+
+    window.clearTimeout(setDashboardStatus.timeoutId);
+    setDashboardStatus.timeoutId = window.setTimeout(() => {
+        status.textContent = '';
+        status.className = 'dashboard-status';
+    }, 5000);
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+    });
+}
+
+async function getProductImage() {
+    const fileInput = document.getElementById('prodImageFile');
+    const urlInput = document.getElementById('prodImageUrl');
+    const file = fileInput.files[0];
+
+    if (file) {
+        if (file.size > MAX_IMAGE_SIZE) {
+            throw new Error('Use uma imagem de até 2 MB.');
+        }
+
+        return readFileAsDataUrl(file);
+    }
+
+    return urlInput.value.trim();
+}
+
+async function submitProduct(event) {
+    event.preventDefault();
 
     try {
+        const imageUrl = await getProductImage();
+        if (!imageUrl) {
+            setDashboardStatus('Adicione uma foto ou um link de imagem para o produto.', 'error');
+            return;
+        }
+
+        const product = {
+            name: document.getElementById('prodName').value.trim(),
+            description: document.getElementById('prodDesc').value.trim(),
+            image_url: imageUrl,
+            affiliate_link: document.getElementById('prodLink').value.trim()
+        };
+
         const response = await fetch(`${API_URL}/products`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(product)
         });
-        if(response.ok) {
-            alert('Produto cadastrado com sucesso!');
-            document.getElementById('productForm').reset();
-            loadDashboardProducts();
-        }
-    } catch (error) {
-        alert('Erro ao conectar com a API');
-    }
-});
 
-document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+        if (!response.ok) throw new Error('Erro ao salvar produto');
+
+        event.target.reset();
+        setDashboardStatus('Produto cadastrado com sucesso.');
+        loadDashboardProducts();
+    } catch (error) {
+        console.error(error);
+        setDashboardStatus(error.message || 'Erro ao salvar produto.', 'error');
+    }
+}
+
+async function submitSchedule(event) {
+    event.preventDefault();
+
     const schedule = {
-        barber_name: document.getElementById('schedBarber').value,
+        barber_name: document.getElementById('schedBarber').value.trim(),
         date: document.getElementById('schedDate').value,
-        time: document.getElementById('schedTime').value + ':00' // Adiciona segundos para o formato
+        time: `${document.getElementById('schedTime').value}:00`
     };
 
     try {
@@ -39,51 +88,125 @@ document.getElementById('scheduleForm').addEventListener('submit', async (e) => 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(schedule)
         });
-        if(response.ok) {
-            alert('Horário cadastrado com sucesso!');
-            loadDashboardSchedules();
-        }
+
+        if (!response.ok) throw new Error('Erro ao salvar horário');
+
+        document.getElementById('schedDate').value = '';
+        document.getElementById('schedTime').value = '';
+        setDashboardStatus('Horário adicionado com sucesso.');
+        loadDashboardSchedules();
     } catch (error) {
-        alert('Erro ao conectar com a API');
+        console.error(error);
+        setDashboardStatus('Erro ao salvar horário.', 'error');
     }
-});
+}
+
+async function deleteProduct(id) {
+    try {
+        const response = await fetch(`${API_URL}/products/${id}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Erro ao remover produto');
+        setDashboardStatus('Produto removido.');
+        loadDashboardProducts();
+    } catch (error) {
+        console.error(error);
+        setDashboardStatus('Erro ao remover produto.', 'error');
+    }
+}
+
+async function deleteSchedule(id) {
+    try {
+        const response = await fetch(`${API_URL}/schedules/${id}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Erro ao remover horário');
+        setDashboardStatus('Horário removido.');
+        loadDashboardSchedules();
+    } catch (error) {
+        console.error(error);
+        setDashboardStatus('Erro ao remover horário.', 'error');
+    }
+}
 
 async function loadDashboardProducts() {
+    const list = document.getElementById('dashboardProductsList');
+    if (!list) return;
+
+    list.innerHTML = '<p class="loading-message">Carregando produtos...</p>';
+
     try {
-        const res = await fetch(`${API_URL}/products`);
-        const products = await res.json();
-        const list = document.getElementById('dashboardProductsList');
-        list.innerHTML = products.map(p => `
-            <div class="list-item">
-                <div>
-                    <strong>${p.name}</strong><br>
-                    <small>${p.description.substring(0, 30)}...</small>
+        const response = await fetch(`${API_URL}/products`);
+        if (!response.ok) throw new Error('Erro ao carregar produtos');
+        const products = await response.json();
+
+        if (!products.length) {
+            list.innerHTML = '<p class="empty-message">Nenhum produto cadastrado.</p>';
+            return;
+        }
+
+        list.innerHTML = products.map(product => `
+            <article class="list-item">
+                <img class="list-thumb" src="${escapeHtml(product.image_url || '')}" alt="${escapeHtml(product.name)}" onerror="this.style.display='none';">
+                <div class="list-item-content">
+                    <strong>${escapeHtml(product.name)}</strong>
+                    <a href="${escapeHtml(safeExternalUrl(product.affiliate_link))}" target="_blank" rel="noopener">Abrir link</a>
                 </div>
-            </div>
+                <button class="icon-button danger" type="button" data-delete-product="${product.id}" aria-label="Remover produto">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </article>
         `).join('');
-    } catch (e) {
-        console.error(e);
+
+        list.querySelectorAll('[data-delete-product]').forEach(button => {
+            button.addEventListener('click', () => deleteProduct(button.dataset.deleteProduct));
+        });
+    } catch (error) {
+        console.error(error);
+        list.innerHTML = '<p class="empty-message">Não foi possível carregar os produtos.</p>';
     }
 }
 
 async function loadDashboardSchedules() {
+    const list = document.getElementById('dashboardSchedulesList');
+    if (!list) return;
+
+    list.innerHTML = '<p class="loading-message">Carregando horários...</p>';
+
     try {
-        const res = await fetch(`${API_URL}/schedules`);
-        const schedules = await res.json();
-        const list = document.getElementById('dashboardSchedulesList');
-        list.innerHTML = schedules.map(s => `
-            <div class="list-item">
-                <div>
-                    <strong>${s.date} às ${s.time}</strong><br>
-                    <small>Barbeiro: ${s.barber_name}</small>
+        const response = await fetch(`${API_URL}/schedules?include_unavailable=true`);
+        if (!response.ok) throw new Error('Erro ao carregar horários');
+        const schedules = await response.json();
+
+        if (!schedules.length) {
+            list.innerHTML = '<p class="empty-message">Nenhum horário cadastrado.</p>';
+            return;
+        }
+
+        list.innerHTML = schedules.map(schedule => `
+            <article class="list-item ${schedule.is_available ? '' : 'muted'}">
+                <div class="list-item-content">
+                    <strong>${formatDateBR(schedule.date)} às ${formatTime(schedule.time)}</strong>
+                    <span>${escapeHtml(schedule.barber_name)} ${schedule.is_available ? 'disponível' : 'reservado'}</span>
                 </div>
-            </div>
+                <button class="icon-button danger" type="button" data-delete-schedule="${schedule.id}" aria-label="Remover horário">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </article>
         `).join('');
-    } catch (e) {
-        console.error(e);
+
+        list.querySelectorAll('[data-delete-schedule]').forEach(button => {
+            button.addEventListener('click', () => deleteSchedule(button.dataset.deleteSchedule));
+        });
+    } catch (error) {
+        console.error(error);
+        list.innerHTML = '<p class="empty-message">Não foi possível carregar os horários.</p>';
     }
 }
 
-// Load initial data
-loadDashboardProducts();
-loadDashboardSchedules();
+document.addEventListener('DOMContentLoaded', () => {
+    const productForm = document.getElementById('productForm');
+    const scheduleForm = document.getElementById('scheduleForm');
+
+    if (productForm) productForm.addEventListener('submit', submitProduct);
+    if (scheduleForm) scheduleForm.addEventListener('submit', submitSchedule);
+
+    loadDashboardProducts();
+    loadDashboardSchedules();
+});
