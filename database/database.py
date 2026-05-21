@@ -4,11 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 import os
 
-DEFAULT_DATABASE_URL = (
-    "postgresql://neondb_owner:npg_tKdjgc52LIus@"
-    "ep-spring-king-acjr2vjc-pooler.sa-east-1.aws.neon.tech/"
-    "neondb?sslmode=require&channel_binding=require"
-)
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
 
