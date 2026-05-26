@@ -8,6 +8,7 @@ from urllib.parse import quote_plus
 
 
 LOCAL_DATABASE_URL = "sqlite:///./sql_app.db"
+DATABASE_URL_SOURCE = "local_sqlite"
 
 
 def _running_on_railway() -> bool:
@@ -36,14 +37,41 @@ def _normalize_database_url(url: str) -> str:
     return url
 
 
+def _env_presence() -> dict:
+    keys = [
+        "DATABASE_URL",
+        "DATABASE_PRIVATE_URL",
+        "DATABASE_PUBLIC_URL",
+        "POSTGRES_URL",
+        "PGHOST",
+        "PGPORT",
+        "PGUSER",
+        "PGPASSWORD",
+        "PGDATABASE",
+        "RAILWAY_ENVIRONMENT",
+        "RAILWAY_PROJECT_ID",
+        "RAILWAY_SERVICE_ID",
+    ]
+    return {key: bool(os.getenv(key)) for key in keys}
+
+
 def _resolve_database_url() -> str:
-    url = (
-        os.getenv("DATABASE_URL")
-        or os.getenv("DATABASE_PRIVATE_URL")
-        or os.getenv("DATABASE_PUBLIC_URL")
-        or os.getenv("POSTGRES_URL")
-        or _postgres_url_from_pg_vars()
-    )
+    global DATABASE_URL_SOURCE
+
+    candidates = [
+        ("DATABASE_URL", os.getenv("DATABASE_URL")),
+        ("DATABASE_PRIVATE_URL", os.getenv("DATABASE_PRIVATE_URL")),
+        ("DATABASE_PUBLIC_URL", os.getenv("DATABASE_PUBLIC_URL")),
+        ("POSTGRES_URL", os.getenv("POSTGRES_URL")),
+        ("PG* variables", _postgres_url_from_pg_vars()),
+    ]
+
+    url = None
+    for source, candidate in candidates:
+        if candidate:
+            DATABASE_URL_SOURCE = source
+            url = candidate
+            break
 
     if url:
         return _normalize_database_url(url)
@@ -54,6 +82,7 @@ def _resolve_database_url() -> str:
             "Adicione DATABASE_URL ou conecte as variáveis do serviço PostgreSQL ao serviço web."
         )
 
+    DATABASE_URL_SOURCE = "local_sqlite"
     return LOCAL_DATABASE_URL
 
 
@@ -77,10 +106,12 @@ class Base(DeclarativeBase):
 def database_public_info() -> dict:
     url = make_url(SQLALCHEMY_DATABASE_URL)
     return {
+        "source": DATABASE_URL_SOURCE,
         "dialect": url.get_backend_name(),
         "database": url.database,
         "host": url.host,
         "is_local_sqlite": url.get_backend_name().startswith("sqlite"),
+        "env_present": _env_presence(),
     }
 
 

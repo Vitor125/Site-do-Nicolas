@@ -1,4 +1,5 @@
 from datetime import date, time
+import logging
 from pathlib import Path
 from typing import List
 
@@ -14,6 +15,7 @@ import database.models as models
 from database.database import database_public_info, engine, get_db
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+logger = logging.getLogger("maneirin")
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -29,6 +31,11 @@ app.add_middleware(
 
 app.mount("/Fotos", StaticFiles(directory=BASE_DIR / "Fotos"), name="Fotos")
 app.mount("/icons", StaticFiles(directory=BASE_DIR / "icons"), name="icons")
+
+
+@app.on_event("startup")
+def log_database_startup():
+    logger.warning("Database configuration: %s", database_public_info())
 
 
 class ProductBase(BaseModel):
@@ -76,9 +83,22 @@ def health_check(db: Session = Depends(get_db)):
 @app.get("/api/db-status")
 def database_status(db: Session = Depends(get_db)):
     db.execute(text("select 1"))
+    db_details = {}
+    if database_public_info()["dialect"].startswith("postgresql"):
+        row = db.execute(
+            text("select current_database(), current_schema(), inet_server_addr()::text, inet_server_port()")
+        ).fetchone()
+        db_details = {
+            "current_database": row[0],
+            "current_schema": row[1],
+            "server_addr": row[2],
+            "server_port": row[3],
+        }
+
     return {
         "status": "ok",
         "database": database_public_info(),
+        "db_details": db_details,
         "products_count": db.query(models.Product).count(),
         "schedules_count": db.query(models.Schedule).count(),
     }
